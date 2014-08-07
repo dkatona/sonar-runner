@@ -42,10 +42,14 @@ class ServerConnection {
 
   private final String serverUrl;
   private final String userAgent;
+  private final String sonarUser;
+  private final String sonarPassword;
 
-  private ServerConnection(String serverUrl, String app, String appVersion) {
+  private ServerConnection(String serverUrl, String app, String appVersion, String sonarUser,String sonarPassword) {
     this.serverUrl = removeEndSlash(serverUrl);
     this.userAgent = app + "/" + appVersion;
+    this.sonarUser = sonarUser;
+    this.sonarPassword = sonarPassword;
   }
 
   private String removeEndSlash(String url) {
@@ -59,7 +63,9 @@ class ServerConnection {
     String serverUrl = properties.getProperty("sonar.host.url");
     String app = properties.getProperty(InternalProperties.RUNNER_APP);
     String appVersion = properties.getProperty(InternalProperties.RUNNER_APP_VERSION);
-    return new ServerConnection(serverUrl, app, appVersion);
+    String sonarUser = properties.getProperty(InternalProperties.SONAR_LOGIN);
+    String sonarPassword = properties.getProperty(InternalProperties.SONAR_PASSWORD);
+    return new ServerConnection(serverUrl, app, appVersion, sonarUser, sonarPassword);
   }
 
   void download(String path, File toFile) {
@@ -112,6 +118,9 @@ class ServerConnection {
     request.acceptGzipEncoding().uncompress(true);
     request.connectTimeout(CONNECT_TIMEOUT_MILLISECONDS).readTimeout(READ_TIMEOUT_MILLISECONDS);
     request.userAgent(userAgent);
+    if (sonarUser != null && sonarPassword != null){
+          request.basic(sonarUser, sonarPassword);
+      }
     return request;
   }
 
